@@ -15,14 +15,15 @@ import com.facebook.react.bridge.WritableNativeMap;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
 
 public class RNGeocoderModule extends ReactContextBaseJavaModule {
 
-    private Geocoder geocoder;
+    private ReactApplicationContext reactContext;
 
-    public RNGeocoderModule(ReactApplicationContext reactContext) {
-        super(reactContext);
-        geocoder = new Geocoder(reactContext.getApplicationContext());
+    public RNGeocoderModule(ReactApplicationContext context) {
+        super(context);
+        reactContext = context;
     }
 
     @Override
@@ -32,6 +33,8 @@ public class RNGeocoderModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void geocodeAddress(String addressName, Promise promise) {
+        Geocoder geocoder = new Geocoder(reactContext.getApplicationContext());
+
         if (!geocoder.isPresent()) {
           promise.reject("NOT_AVAILABLE", "Geocoder not available for this platform");
           return;
@@ -48,7 +51,10 @@ public class RNGeocoderModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void geocodePosition(ReadableMap position, Promise promise) {
+    public void geocodePosition(ReadableMap position, String locale, Promise promise) {
+        Locale geocoderLocale = new Locale(locale);
+        Geocoder geocoder = new Geocoder(reactContext.getApplicationContext(), geocoderLocale);
+
         if (!geocoder.isPresent()) {
             promise.reject("NOT_AVAILABLE", "Geocoder not available for this platform");
             return;
@@ -66,6 +72,9 @@ public class RNGeocoderModule extends ReactContextBaseJavaModule {
     WritableArray transform(List<Address> addresses) {
         WritableArray results = new WritableNativeArray();
 
+        if (addresses == null) {
+            return results;
+        }
         for (Address address: addresses) {
             WritableMap result = new WritableNativeMap();
 
